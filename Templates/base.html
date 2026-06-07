@@ -1,50 +1,124 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full scroll-smooth">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}Expense Tracker Lite{% endblock %}</title>
+    <title>{% block title %}Expense Tracker Pro{% endblock %}</title>
 
-    <!-- Tailwind CDN -->
+    <!-- Tailwind CDN with animations -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         darkMode: "class",
-        theme: { extend: { colors: { brand: { DEFAULT: "#38bdf8" } } } },
+        theme: {
+          extend: {
+            colors: {
+              brand: { DEFAULT: "#06b6d4", light: "#06b6d4", dark: "#0891b2" },
+              food: "#f97316",
+              transport: "#3b82f6",
+              rent: "#ec4899",
+              utility: "#eab308",
+              grocery: "#10b981",
+              health: "#f43f5e",
+              others: "#8b5cf6"
+            },
+            animation: {
+              "fade-in": "fadeIn 0.3s ease-in",
+              "slide-up": "slideUp 0.3s ease-out",
+              "pulse-soft": "pulseSoft 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+              "bounce-soft": "bounceSoft 1s ease-in-out"
+            },
+            keyframes: {
+              fadeIn: { "0%": { opacity: "0" }, "100%": { opacity: "1" } },
+              slideUp: { "0%": { transform: "translateY(10px)", opacity: "0" }, "100%": { transform: "translateY(0)", opacity: "1" } },
+              pulseSoft: { "0%, 100%": { opacity: "1" }, "50%": { opacity: ".7" } },
+              bounceSoft: { "0%, 100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-5px)" } }
+            }
+          }
+        }
       };
     </script>
+    <!-- Feather Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
     {% block head_extra %}{% endblock %}
+    <style>
+      * { @apply transition-colors duration-200; }
+      .expense-row:hover { @apply bg-slate-800/50; }
+      .category-badge { @apply px-3 py-1 rounded-full text-xs font-bold !text-white; }
+      .shimmer { background: linear-gradient(90deg, #1e293b 0%, #334155 50%, #1e293b 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
+      @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    </style>
   </head>
-  <body class="h-full bg-slate-900 text-slate-100">
-    <header class="border-b border-slate-800 bg-slate-900/60 backdrop-blur">
-      <div class="mx-auto max-w-6xl px-4 py-4">
-        <a href="#" class="text-xl font-bold tracking-tight">
-          <span class="text-brand">Expense</span> Tracker
-          <span class="text-slate-400">Lite</span>
+  <body class="h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <header class="sticky top-0 z-50 border-b border-slate-800/50 bg-slate-900/80 backdrop-blur-md">
+      <div class="mx-auto max-w-6xl px-4 py-3">
+        <a href="{{ url_for('index') }}" class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold tracking-tight">Expense Tracker</h1>
+            <p class="text-xs text-slate-400">Smart Budget Manager</p>
+          </div>
         </a>
       </div>
     </header>
 
     <main class="mx-auto max-w-6xl px-4 py-8">
-      <!-- Flash messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div class="space-y-2 mb-4">
+      <!-- Animated Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %} 
+      {% if messages %}
+      <div class="space-y-2 mb-6" id="alerts">
         {% for category, message in messages %}
-        <div
-          class="rounded-xl px-4 py-3 text-sm {% if category == 'success' %} bg-emerald-500/10 text-emerald-300 border border-emerald-400/20 {% elif category == 'error' %} bg-rose-500/10 text-rose-300 border border-rose-400/20 {% else %} bg-slate-800 text-slate-200 border border-slate-700 {% endif %}"
+        <div class="animate-fade-in animate-slide-up rounded-xl px-4 py-4 text-sm font-medium border backdrop-blur-sm
+          {% if category == 'success' %} 
+            bg-emerald-500/10 text-emerald-300 border-emerald-400/30 shadow-lg shadow-emerald-500/10
+          {% elif category == 'error' %} 
+            bg-rose-500/10 text-rose-300 border-rose-400/30 shadow-lg shadow-rose-500/10
+          {% else %} 
+            bg-slate-800/50 text-slate-200 border-slate-700/50
+          {% endif %}"
+          role="alert"
         >
-          {{ message }}
+          <div class="flex items-center gap-3">
+            {% if category == 'success' %}
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+            {% elif category == 'error' %}
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+            {% endif %}
+            <span>{{ message }}</span>
+          </div>
         </div>
         {% endfor %}
       </div>
-      {% endif %} {% endwith %} {% block content %}{% endblock %}
+      {% endif %} 
+      {% endwith %} 
+      {% block content %}{% endblock %}
     </main>
 
-    <footer class="mx-auto max-w-6xl px-4 pb-8 text-xs text-slate-500">
-      Built with Flask & Tailwind
+    <footer class="mt-12 border-t border-slate-800/50 bg-slate-900/50 py-6">
+      <div class="mx-auto max-w-6xl px-4 text-center text-xs text-slate-500">
+        <p>💰 Create By <span class="text-cyan-400 font-semibold">Vk</span></p>
+        <p class="mt-2">Track your expenses smartly • Stay budget-conscious</p>
+      </div>
     </footer>
 
     {% block body_end %}{% endblock %}
+    
+    <script>
+      feather.replace();
+      // Auto-hide alerts after 5 seconds
+      document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('#alerts > div');
+        alerts.forEach(alert => {
+          setTimeout(() => {
+            alert.classList.add('opacity-0', 'transition-opacity');
+            setTimeout(() => alert.remove(), 300);
+          }, 5000);
+        });
+      });
+    </script>
   </body>
 </html>
